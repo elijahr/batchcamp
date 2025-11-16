@@ -8,17 +8,26 @@ export const createDownloadButton = (store: StoreApi<ContentState>) => {
     const { selected, resetSelected } = store.getState();
 
     try {
-      // Await the message - this will wake up the service worker if inactive
+      // Optional wake-up ping for MV3 service worker
+      try {
+        await browser.runtime.sendMessage({ type: "ping" });
+      } catch {
+        // ignore ping failures; we'll still try to send the real message
+      }
+
+      // Await the message and require a success response
       const response = await browser.runtime.sendMessage({
         type: "send-items-to-background",
         items: Object.values(selected).filter((x) => x),
       });
 
       if (!response || response.success !== true) {
-        throw new Error(response?.error || "Background script did not acknowledge request");
+        throw new Error(
+          response?.error || "Background script did not acknowledge request"
+        );
       }
 
-      // Only reset after successful message delivery
+      // Only reset after successful delivery
       resetSelected();
     } catch (error) {
       console.error("Failed to send items to background:", error);
