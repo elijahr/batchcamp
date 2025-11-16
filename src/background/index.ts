@@ -92,36 +92,37 @@ const handleNewTabOpened = async () => {
   return true;
 };
 
-// IMPORTANT: non-async listener; use return true to keep the message channel open
-browser.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
+// IMPORTANT: Return a Promise to handle async operations in MV3
+// webextension-polyfill automatically handles the response for promises
+browser.runtime.onMessage.addListener(async (message: Message) => {
   if (message.type === "ping") {
-    sendResponse({ ok: true });
-    return true;
+    return { ok: true };
   }
 
   if (message.type === "send-items-to-background") {
-    handleNewItems(message.items)
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => {
-        console.error("Error handling new items:", error);
-        sendResponse({ success: false, error: error?.message || String(error) });
-      });
-    return true; // keep the message channel open for async response
+    try {
+      await handleNewItems(message.items);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling new items:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { success: false, error: errorMessage };
+    }
   }
 
   if (message.type === "tab-opened") {
-    handleNewTabOpened()
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => {
-        console.error("Error handling tab opened:", error);
-        sendResponse({ success: false, error: error?.message || String(error) });
-      });
-    return true;
+    try {
+      await handleNewTabOpened();
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling tab opened:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { success: false, error: errorMessage };
+    }
   }
 
   // Fallback
-  sendResponse({ success: true });
-  return true;
+  return { success: true };
 });
 
 export {};
