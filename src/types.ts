@@ -29,7 +29,11 @@ export type TabOpenedMessage = {
   type: "tab-opened";
 };
 
-export type Message = SendItemsMessage | TabOpenedMessage;
+export type PingMessage = {
+  type: "ping";
+};
+
+export type Message = SendItemsMessage | TabOpenedMessage | PingMessage;
 
 export type ItemType = "single" | "multiple";
 
