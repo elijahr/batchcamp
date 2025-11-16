@@ -77,6 +77,7 @@ const handleNewItems = async (items: Item[]) => {
   store.set({ items });
 };
 
+// When the downloads tab loads, send any queued items and clear the queue
 const handleNewTabOpened = async () => {
   const storage = await store.get();
 
@@ -91,18 +92,36 @@ const handleNewTabOpened = async () => {
   return true;
 };
 
-browser.runtime.onMessage.addListener(
-  async (message: Message, _, sendResponse: () => void) => {
-    if (message.type === "send-items-to-background") {
-      await handleNewItems(message.items);
-    }
-
-    if (message.type === "tab-opened") {
-      await handleNewTabOpened();
-    }
-
-    sendResponse();
+// IMPORTANT: non-async listener; use return true to keep the message channel open
+browser.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
+  if (message.type === "ping") {
+    sendResponse({ ok: true });
+    return true;
   }
-);
+
+  if (message.type === "send-items-to-background") {
+    handleNewItems(message.items)
+      .then(() => sendResponse({ success: true }))
+      .catch((error) => {
+        console.error("Error handling new items:", error);
+        sendResponse({ success: false, error: error?.message || String(error) });
+      });
+    return true; // keep the message channel open for async response
+  }
+
+  if (message.type === "tab-opened") {
+    handleNewTabOpened()
+      .then(() => sendResponse({ success: true }))
+      .catch((error) => {
+        console.error("Error handling tab opened:", error);
+        sendResponse({ success: false, error: error?.message || String(error) });
+      });
+    return true;
+  }
+
+  // Fallback
+  sendResponse({ success: true });
+  return true;
+});
 
 export {};
