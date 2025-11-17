@@ -10,10 +10,10 @@ export default defineConfig({
       browser: process.env.TARGET || "chrome",
       manifest: "./manifest.json",
       additionalInputs: ["src/tab/index.html"],
-      // Skip manifest validation due to network issues fetching schema from json.schemastore.org
-      // The plugin receives HTML redirects instead of JSON, causing build failures
-      // Manual validation: manifest must have valid manifest_version (2 or 3) and required fields
-      skipManifestValidation: true,
+      // Manifest validation is enabled (requires vite-plugin-web-extension >=4.5.0)
+
+
+      // skipManifestValidation: false, // (default is false; can be omitted)
     }),
     sentryVitePlugin({
       org: "batchcamp-t7u",
