@@ -31,7 +31,13 @@ export const createDownloadButton = (store: StoreApi<ContentState>) => {
       resetSelected();
     } catch (error) {
       console.error("Failed to send items to background:", error);
-      alert("Failed to start download. Please try again.");
+      const errorMsg = error && typeof error === "object" && "message" in error
+        ? (error as Error).message
+        : String(error);
+      alert(
+        `Failed to start download: ${errorMsg}\n\n` +
+        "Please try reloading the page or reinstalling the extension."
+      );
     }
   };
 
