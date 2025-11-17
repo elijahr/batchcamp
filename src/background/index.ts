@@ -96,7 +96,7 @@ const handleNewTabOpened = async () => {
 // webextension-polyfill automatically handles the response for promises
 browser.runtime.onMessage.addListener(async (message: Message) => {
   if (message.type === "ping") {
-    return { ok: true };
+    return { success: true };
   }
 
   if (message.type === "send-items-to-background") {
